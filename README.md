@@ -1,6 +1,6 @@
 # HomeAutomation
 This project uses esp32 to communicate with local mqtt broker. Then informations flow through UART to stm32f103 with rs485 menager software, that distribute data between the other stm32 with subdevice software.
-
+The esp32 dosen't manage the rs485, because it could be replaced with offline solution - eg. Raspberry Pi with touch screen and application, that directly sends data to stm32 rs485 menager. 
 [Video presenting how it work](https://www.youtube.com/watch?v=BQn5Pm7Jpvo)
 
 ## MQTT commands
