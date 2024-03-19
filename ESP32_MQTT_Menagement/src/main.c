@@ -35,6 +35,8 @@ static const char *TAG = "MQTT_TCP";
 // const char *ssid = "internet_dom1";
 // const char *pass = "1qaz2wsx";
 const char *ssid = "UPC94DE76D";
+const char *mqtt_addres = "mqtt://192.168.0.242:1883";
+
 const char *pass = "Vv5re2masfmk";
 volatile bool WifiConnected = false;
 volatile bool mqttConnected = false;
@@ -120,7 +122,7 @@ static void uart_configure()
 static void mqtt_app_start(void)
 {
     const esp_mqtt_client_config_t mqtt_cfg = {
-        .broker.address.uri = "mqtt://192.168.0.242:1883"
+        .broker.address.uri = mqtt_addres
     };
 
     client = esp_mqtt_client_init(&mqtt_cfg);

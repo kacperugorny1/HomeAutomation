@@ -129,11 +129,11 @@ int main(void)
 			leds = data[1];
 		}
 		else if(data[0] == 0xFF){
-			HAL_UART_Transmit(&huart1, data, data_len, HAL_MAX_DELAY);
 			data_to_send[0] = leds;
 			for(int i = 0; i < SUBDEVICES; ++i){
 				HAL_Delay(10);
-				HAL_UART_Transmit(&huart1, &(adresses[i]), ADRESS_LEN, 20);
+				data[1] = adresses[i];
+				HAL_UART_Transmit(&huart1, data, data_len, 20);
 				HAL_GPIO_WritePin(RS_MODE_GPIO_Port, RS_MODE_Pin, GPIO_PIN_RESET);
 				HAL_UART_Receive(&huart1, &data_to_send[i + 1], 1, 40);
 				HAL_GPIO_WritePin(RS_MODE_GPIO_Port, RS_MODE_Pin, GPIO_PIN_SET);

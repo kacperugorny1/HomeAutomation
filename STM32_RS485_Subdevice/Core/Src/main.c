@@ -97,7 +97,6 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   HAL_GPIO_WritePin(RS_MODE_GPIO_Port, RS_MODE_Pin, GPIO_PIN_RESET);
-  uint32_t tm = 0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -107,30 +106,18 @@ int main(void)
 	  for(int i = 0; i < 4; ++i){
 		  HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin<<i, (leds>>i & 0x01));
 	  }
-	  if(HAL_UART_Receive(&huart1, data, DATALEN, HAL_MAX_DELAY) == HAL_OK){
+	  if(HAL_UART_Receive(&huart1, data, DATALEN, 10) == HAL_OK){
 		  if((data[0]) == ADDRESS){
 			  leds = data[1];
 		  }
-		  else if(data[0] == 0xFF){
-			  tm = HAL_GetTick();
-			  while(data[0] != ADDRESS && HAL_GetTick() - tm < 400){
-				  HAL_UART_Receive(&huart1, data, 1, HAL_MAX_DELAY);
-			  }
-			  if(HAL_GetTick() - tm < 400){
-				  HAL_GPIO_WritePin(RS_MODE_GPIO_Port, RS_MODE_Pin, GPIO_PIN_SET);
-				  HAL_UART_Transmit(&huart1, &leds, 1, 30);
-				  HAL_GPIO_WritePin(RS_MODE_GPIO_Port, RS_MODE_Pin, GPIO_PIN_RESET);
-			  }
-			  //WAIT FOR INFORMATIONS FROM OTHER SUBDEVICES
-			  while(HAL_GetTick() - tm < 400){
-				  HAL_UART_Receive(&huart1, data, 1, 10);
-			  }
+		  else if(data[0] == 0xFF && data[1] == ADDRESS){
+			  HAL_GPIO_WritePin(RS_MODE_GPIO_Port, RS_MODE_Pin, GPIO_PIN_SET);
+			  HAL_UART_Transmit(&huart1, &leds, 1, 30);
+			  HAL_GPIO_WritePin(RS_MODE_GPIO_Port, RS_MODE_Pin, GPIO_PIN_RESET);
 		  }
 
 		  HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
 	  }
-	  tm = HAL_GetTick();
-	  while(HAL_GetTick() - tm < 200);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
