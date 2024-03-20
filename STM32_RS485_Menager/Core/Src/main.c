@@ -70,7 +70,7 @@ uint8_t data_to_send[SUBDEVICES + 1];
 uint8_t adresses[SUBDEVICES] = {0b00000001,0b00000010};
 int ind = 0;
 GPIO_PinState state = 0;
-char leds = 0x01;
+uint8_t leds = 0x01;
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
@@ -128,7 +128,7 @@ int main(void)
 		if(data[0] == ADDRESS){
 			leds = data[1];
 		}
-		else if(data[0] == 0xFF){
+		else if(data[0] == 0xFF && data[1] == 0xFF){
 			data_to_send[0] = leds;
 			for(int i = 0; i < SUBDEVICES; ++i){
 				HAL_Delay(10);
@@ -140,6 +140,24 @@ int main(void)
 			}
 			HAL_UART_Transmit(&huart3, data_to_send, SUBDEVICES + 1, HAL_MAX_DELAY);
 
+
+		}
+		else if(data[0] == 0xFF){
+			int exists = 0;
+			if(data[1] == ADDRESS)
+				HAL_UART_Transmit(&huart3, &leds, 1, HAL_MAX_DELAY);
+
+			else if(data[1] != ADDRESS){
+				for(int i = 0; i < SUBDEVICES; ++i)
+					if(data[1] == adresses[i]) exists = 1;
+				if(exists == 1){
+					HAL_UART_Transmit(&huart1, data, data_len, 20);
+					HAL_GPIO_WritePin(RS_MODE_GPIO_Port, RS_MODE_Pin, GPIO_PIN_RESET);
+					HAL_UART_Receive(&huart1, &data_to_send[0], 1, 40);
+					HAL_GPIO_WritePin(RS_MODE_GPIO_Port, RS_MODE_Pin, GPIO_PIN_SET);
+					HAL_UART_Transmit(&huart3, data_to_send, 1, HAL_MAX_DELAY);
+				}
+			}
 
 		}
 		else{
