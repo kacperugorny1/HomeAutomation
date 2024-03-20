@@ -6,7 +6,8 @@ The esp32 dosen't manage the rs485, because it could be replaced with offline so
 ## MQTT commands
 To communicate with the hardware you use I2C like commands. 
 - "00001111 00001100" - first "byte" and then after the space there is a command that device get. 
-- "11111111 00000000" - special command that request for state of every device. 
+- "11111111 11111111" - command that request for state of every device. 
+- "11111111 ADDRESS" - command that request for state of particural device. 
 - "hello" - Checks if esp32 is connected to mqtt topic.
 
 ## Subdevice functionality
