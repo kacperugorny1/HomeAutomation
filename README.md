@@ -2,6 +2,8 @@
 This project uses esp32 to communicate with local mqtt broker. Then informations flow through UART to stm32f103 with rs485 menager software, that distribute data between the other stm32 with subdevice software.
 The esp32 dosen't manage the rs485, because it could be replaced with offline solution - eg. Raspberry Pi with touch screen and application, that directly sends data to stm32 rs485 menager. 
 [Video presenting how it work](https://www.youtube.com/watch?v=BQn5Pm7Jpvo)
+<br>
+New functionality - at start rs485 menager scans the bus for the devices - no hardcoded addresses.
 
 ## MQTT commands
 To communicate with the hardware you use I2C like commands. 
@@ -16,5 +18,5 @@ Subdevice in current project just turn on and turn off 4 leds, but it could be m
 ## TODO
 - Access application
 - Real life application - room lights, led strips etc.
-- Dynamic adding devices, now its hard coded. It should work like this - device has hardcoded address and adding new device to bus its accesible without editing the menager code 
+- Mqtt command to scan bus for devices
 
