@@ -72,6 +72,7 @@ int ind = 0;
 GPIO_PinState state = 0;
 uint8_t leds = 0x01;
 
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
 
@@ -113,6 +114,12 @@ int main(void)
   HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin,1);
   uint32_t tm = 0;
   HAL_GPIO_WritePin(RS_MODE_GPIO_Port, RS_MODE_Pin, GPIO_PIN_SET);
+
+//  Look for devices - scanning the bus
+
+
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -135,7 +142,8 @@ int main(void)
 				data[1] = adresses[i];
 				HAL_UART_Transmit(&huart1, data, data_len, 20);
 				HAL_GPIO_WritePin(RS_MODE_GPIO_Port, RS_MODE_Pin, GPIO_PIN_RESET);
-				HAL_UART_Receive(&huart1, &data_to_send[i + 1], 1, 40);
+				HAL_UART_Receive(&huart1, data, 2, 40);
+				data_to_send[i + 1] = data[1];
 				HAL_GPIO_WritePin(RS_MODE_GPIO_Port, RS_MODE_Pin, GPIO_PIN_SET);
 			}
 			HAL_UART_Transmit(&huart3, data_to_send, SUBDEVICES + 1, HAL_MAX_DELAY);
@@ -153,7 +161,8 @@ int main(void)
 				if(exists == 1){
 					HAL_UART_Transmit(&huart1, data, data_len, 20);
 					HAL_GPIO_WritePin(RS_MODE_GPIO_Port, RS_MODE_Pin, GPIO_PIN_RESET);
-					HAL_UART_Receive(&huart1, &data_to_send[0], 1, 40);
+					HAL_UART_Receive(&huart1, data, 2, 40);
+					data_to_send[0] = data[1];
 					HAL_GPIO_WritePin(RS_MODE_GPIO_Port, RS_MODE_Pin, GPIO_PIN_SET);
 					HAL_UART_Transmit(&huart3, data_to_send, 1, HAL_MAX_DELAY);
 				}

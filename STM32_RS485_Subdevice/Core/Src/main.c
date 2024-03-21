@@ -108,11 +108,13 @@ int main(void)
 	  }
 	  if(HAL_UART_Receive(&huart1, data, DATALEN, 10) == HAL_OK){
 		  if((data[0]) == ADDRESS){
-			  leds = data[1];
+			  leds = data[1] & 0x0F;
 		  }
 		  else if(data[0] == 0xFF && data[1] == ADDRESS){
 			  HAL_GPIO_WritePin(RS_MODE_GPIO_Port, RS_MODE_Pin, GPIO_PIN_SET);
-			  HAL_UART_Transmit(&huart1, &leds, 1, 30);
+			  data[0] = ADDRESS;
+			  data[1] = leds;
+			  HAL_UART_Transmit(&huart1, data, 2, 30);
 			  HAL_GPIO_WritePin(RS_MODE_GPIO_Port, RS_MODE_Pin, GPIO_PIN_RESET);
 		  }
 
