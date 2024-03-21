@@ -16,4 +16,5 @@ Subdevice in current project just turn on and turn off 4 leds, but it could be m
 ## TODO
 - Access application
 - Real life application - room lights, led strips etc.
+- Dynamic adding devices, now its hard coded. It should work like this - device has hardcoded address and adding new device to bus its accesible without editing the menager code 
 
