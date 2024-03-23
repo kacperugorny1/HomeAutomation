@@ -8,7 +8,8 @@ New functionality - at start rs485 menager scans the bus for the devices - no ha
 ## MQTT commands
 To communicate with the hardware you use I2C like commands. 
 - "00001111 00001100" - first "byte" and then after the space there is a command that device get. 
-- "11111111 11111111" - command that request for state of every device. 
+- "11111111 11111111" - command that request for state of every device.
+- "11111111 11111110" - scan bus for devices
 - "11111111 ADDRESS" - command that request for state of particural device. 
 - "hello" - Checks if esp32 is connected to mqtt topic.
 
@@ -18,5 +19,4 @@ Subdevice in current project just turn on and turn off 4 leds, but it could be m
 ## TODO
 - Access application
 - Real life application - room lights, led strips etc.
-- Mqtt command to scan bus for devices
-
+- Wider bytes for communication - 4 or 8 bytes to have more control and commands be more straight foward - first byte says if its set, get state or scan the bus - now the commands limits the other possibilities - less addresses in bus 
