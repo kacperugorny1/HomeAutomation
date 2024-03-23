@@ -140,11 +140,11 @@ int main(void)
 	  for(int i = 0; i < 4; ++i){
 		  HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin<<i, (leds>>i & 0x01));
 	  }
-	  if(HAL_UART_Receive(&huart3,  data, data_len, HAL_MAX_DELAY) == HAL_OK)
+	  if(HAL_UART_Receive(&huart3,  data, data_len, 20) == HAL_OK)
 	  {
 		HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
 		if(data[0] == ADDRESS){
-			leds = data[1];
+			leds = data[1] & 0x0F;
 		}
 		else if(data[0] == 0xFF && data[1] == 0xFF){
 			data_to_send[0] = leds;

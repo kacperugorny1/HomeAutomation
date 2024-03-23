@@ -32,16 +32,19 @@
 static const int RX_BUF_SIZE = 1024;
 
 static const char *TAG = "MQTT_TCP";
-// const char *ssid = "internet_dom1";
-// const char *pass = "1qaz2wsx";
-const char *ssid = "UPC94DE76D";
-const char *mqtt_addres = "mqtt://192.168.0.242:1883";
+const char *ssid = "internet_dom1";
+const char *pass = "1qaz2wsx";
+// const char *ssid = "UPC94DE76D";
+// const char *pass = "Vv5re2masfmk";
+// const char *mqtt_addres = "mqtt://192.168.0.242:1883"; //wro
+const char *mqtt_addres = "mqtt://192.168.1.129:1883"; //goszcz
 
-const char *pass = "Vv5re2masfmk";
+
 volatile bool WifiConnected = false;
 volatile bool mqttConnected = false;
 int retry_num = 0;
 volatile char* volatile data;
+int expect_address = -1;
 volatile bool send = false;
 volatile bool expectdata = false;
 bool first_ignore = true;
@@ -70,24 +73,35 @@ void app_main() {
 
 }
 static void uart_rx_task(void *arg){
-    char* Rxdata = (char *) malloc(sizeof(char) * 3);
-    char str[100] = "";
+    char* Rxdata = (char *) malloc(sizeof(char) * 256);
+    char str[1024] = "";
+    char help[100] = "";
     while(1){
-        if(uart_read_bytes(UART_NUM_2, (void *)Rxdata, 3,200/portTICK_PERIOD_MS) != 0 && expectdata){
-            printf("Rxdata: %d %d %d\n", Rxdata[0], Rxdata[1], Rxdata[2]);
-            sprintf(str,"u0: "BYTE_TO_BINARY_PATTERN" u1: "BYTE_TO_BINARY_PATTERN" u1: "BYTE_TO_BINARY_PATTERN"\n",BYTE_TO_BINARY(Rxdata[0]),BYTE_TO_BINARY(Rxdata[1]),BYTE_TO_BINARY(Rxdata[2]));
+        int l = uart_read_bytes(UART_NUM_2, (void *)Rxdata, 3,200/portTICK_PERIOD_MS);
+        if(l != 0 && expectdata){
+            for(int i = 0; i < l; ++i){
+                if(expect_address != -1 && l == 1)
+                    sprintf(help,"u%d: "BYTE_TO_BINARY_PATTERN" ",expect_address,BYTE_TO_BINARY(Rxdata[i]));
+                else
+                    sprintf(help,"u%d: "BYTE_TO_BINARY_PATTERN" ",i,BYTE_TO_BINARY(Rxdata[i]));
+                strcat(str,help);
+            }
+            printf(str);
             esp_mqtt_client_publish(client,"test",str,0,0,0);
+            strcpy(str,"");
+            expect_address = -1;
+            expectdata = false;
         }
     }
 }
 
 static void uart_tx_task(void *arg){
-    char* Txdata = (char*) malloc(100);
     while (1) {
         vTaskDelay(200 / portTICK_PERIOD_MS);
         if(send == true){
             printf("Sending %d %d\n",data[0], data[1]);
             if(data[0] == 0xFF) expectdata = true;
+            if(data[1] != 0xFF) expect_address = data[1];
             send = false;
             uart_write_bytes(UART, data, DATALEN);
             esp_mqtt_client_publish(client,"test","data sent through uart",0,0,0);
