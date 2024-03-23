@@ -69,7 +69,6 @@ void app_main() {
     uart_configure();
     xTaskCreate(uart_tx_task, "uart_tx_task", 4096, NULL, 10, NULL);
     xTaskCreate(uart_rx_task, "uart_rx_task", 4096, NULL, 10, NULL);
-    while(1) vTaskDelay(100/portTICK_PERIOD_MS);
 
 }
 static void uart_rx_task(void *arg){

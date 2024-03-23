@@ -23,6 +23,7 @@
 /* USER CODE BEGIN Includes */
 #include "string.h"
 #include "stdlib.h"
+#include "stdbool.h"
 #define DATALEN 2
 #define ADDRESS 0x00
 /* USER CODE END Includes */
@@ -74,6 +75,31 @@ uint8_t* addresses;
 uint8_t* temp;
 uint8_t* data_to_send;
 
+int scanDevices(bool first){
+  if(first)
+	  addresses = (uint8_t *)malloc(sizeof(uint8_t) * 254);
+  else{
+	  temp = addresses;
+	  addresses = realloc(temp, 254 * sizeof(uint8_t));
+	  free(temp);
+  }
+  subdevices_count = 0;
+  for(int i = 0; i < 253; ++i){
+	data[0] = 0xFF;
+	data[1] = i + 1;
+	HAL_UART_Transmit(&huart1, data, data_len, 20);
+	HAL_GPIO_WritePin(RS_MODE_GPIO_Port, RS_MODE_Pin, GPIO_PIN_RESET);
+	if(HAL_UART_Receive(&huart1, data, 2, 20) == HAL_OK){
+		addresses[subdevices_count++] = data[0];
+	}
+	HAL_GPIO_WritePin(RS_MODE_GPIO_Port, RS_MODE_Pin, GPIO_PIN_SET);
+  }
+  temp = realloc(addresses, subdevices_count * sizeof(uint8_t));
+  free(addresses);
+  addresses = temp;
+  data_to_send = (uint8_t *)malloc(sizeof(uint8_t)*(subdevices_count + 1));
+
+}
 
 
 /* USER CODE END 0 */
@@ -113,22 +139,7 @@ int main(void)
   HAL_GPIO_WritePin(RS_MODE_GPIO_Port, RS_MODE_Pin, GPIO_PIN_SET);
 
 //  Look for devices - scanning the bus
-  addresses = (uint8_t *)malloc(sizeof(uint8_t) * 254);
-  for(int i = 0; i < 253; ++i){
-	data[0] = 0xFF;
-	data[1] = i + 1;
-	HAL_UART_Transmit(&huart1, data, data_len, 20);
-	HAL_GPIO_WritePin(RS_MODE_GPIO_Port, RS_MODE_Pin, GPIO_PIN_RESET);
-	if(HAL_UART_Receive(&huart1, data, 2, 20) == HAL_OK){
-		addresses[subdevices_count++] = data[0];
-	}
-	HAL_GPIO_WritePin(RS_MODE_GPIO_Port, RS_MODE_Pin, GPIO_PIN_SET);
-  }
-  temp = realloc(addresses, subdevices_count * sizeof(uint8_t));
-  free(addresses);
-  addresses = temp;
-  data_to_send = (uint8_t *)malloc(sizeof(uint8_t)*(subdevices_count + 1));
-
+  scanDevices(true);
 
 
   /* USER CODE END 2 */
@@ -146,6 +157,7 @@ int main(void)
 		if(data[0] == ADDRESS){
 			leds = data[1] & 0x0F;
 		}
+		//get all adresses value
 		else if(data[0] == 0xFF && data[1] == 0xFF){
 			data_to_send[0] = leds;
 			for(int i = 0; i < subdevices_count; ++i){
@@ -162,11 +174,15 @@ int main(void)
 
 
 		}
+		//scan adresses
+		else if(data[0] == 0xFF && data[1] == 0xFE){
+			scanDevices(false);
+		}
+		//get one address state
 		else if(data[0] == 0xFF){
 			int exists = 0;
 			if(data[1] == ADDRESS)
 				HAL_UART_Transmit(&huart3, &leds, 1, HAL_MAX_DELAY);
-
 			else if(data[1] != ADDRESS){
 				for(int i = 0; i < subdevices_count; ++i)
 					if(data[1] == addresses[i]) exists = 1;
@@ -184,7 +200,6 @@ int main(void)
 		else{
 			HAL_UART_Transmit(&huart1, data, data_len, HAL_MAX_DELAY);
 
-			//send
 		}
 		tm = HAL_GetTick();
 		while(HAL_GetTick() - tm < 200);
