@@ -100,7 +100,7 @@ static void uart_tx_task(void *arg){
         if(send == true){
             printf("Sending %d %d\n",data[0], data[1]);
             if(data[0] == 0xFF) expectdata = true;
-            if(data[1] != 0xFF) expect_address = data[1];
+            if(data[1] != 0xFF && data[1] != 0xFE) expect_address = data[1];
             send = false;
             uart_write_bytes(UART, data, DATALEN);
             esp_mqtt_client_publish(client,"test","data sent through uart",0,0,0);
