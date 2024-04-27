@@ -4,6 +4,7 @@
 #include "esp_system.h" //esp_init funtions esp_err_t 
 #include "esp_wifi.h" //esp_wifi_init functions and wifi operations
 #include "esp_log.h" //for showing logs
+#include "esp_timer.h" // for esp_timer_get_time
 #include "esp_event.h" //for wifi event
 #include "nvs_flash.h" //non volatile storage
 #include "lwip/err.h" //light weight ip packets error handling
@@ -48,6 +49,8 @@ int expect_address = -1;
 volatile bool send = false;
 volatile bool expectdata = false;
 bool first_ignore = true;
+volatile int64_t tm = 0;
+
 esp_mqtt_client_handle_t client;
 static void wifi_event_handler(void *event_handler_arg, esp_event_base_t event_base, int32_t event_id,void *event_data);
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
@@ -58,10 +61,10 @@ static void uart_rx_task(void *arg);
 static void uart_tx_task(void *arg);
 static void uart_configure();
 
-
 void app_main() {
     nvs_flash_init();
     wifi_connection();
+    esp_timer_early_init();
     data = (char *)malloc(sizeof(char)*2);
     while(!WifiConnected) vTaskDelay(100/portTICK_PERIOD_MS);
     mqtt_app_start();
@@ -76,7 +79,8 @@ static void uart_rx_task(void *arg){
     char str[1024] = "";
     char help[100] = "";
     while(1){
-        int l = uart_read_bytes(UART_NUM_2, (void *)Rxdata, 3,200/portTICK_PERIOD_MS);
+        int l = uart_read_bytes(UART_NUM_2, (void *)Rxdata, 254,200/portTICK_PERIOD_MS);
+        if(esp_timer_get_time() - tm > 300000) expectdata = false;
         if(l != 0 && expectdata){
             for(int i = 0; i < l; ++i){
                 if(expect_address != -1 && l == 1)
@@ -96,15 +100,30 @@ static void uart_rx_task(void *arg){
 
 static void uart_tx_task(void *arg){
     while (1) {
+        //change data to queue or smth like this
         vTaskDelay(200 / portTICK_PERIOD_MS);
-        if(send == true){
+        if(send == true && expectdata == false){
             printf("Sending %d %d\n",data[0], data[1]);
-            if(data[0] == 0xFF) expectdata = true;
-            if(data[1] != 0xFF && data[1] != 0xFE) expect_address = data[1];
+            if(data[0] == 0xFF) {
+                expectdata = true;
+                if(data[1] != 0xFF && data[1] != 0xFE) expect_address = data[1];
+            }
             send = false;
             uart_write_bytes(UART, data, DATALEN);
-            esp_mqtt_client_publish(client,"test","data sent through uart",0,0,0);
         }
+
+        //periodic read leds
+        if(esp_timer_get_time() - tm > 1000000){
+            // wait for all data to come
+            while(expectdata == true) vTaskDelay(100);
+            expect_address = -1;
+            expectdata = true;
+            data[0] = 0xFF;
+            data[1] = 0xFF;
+            uart_write_bytes(UART, data, DATALEN);
+            tm = esp_timer_get_time();
+        }
+
     }
 }
 
@@ -176,7 +195,7 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event){ //here es
         ESP_LOGI(TAG, "MQTT_EVENT_DATA");
         printf("\nTOPIC=%.*s\r\n", event->topic_len, event->topic);
         printf("DATA=%.*s\r\n", event->data_len, event->data);
-        bool dont = false;
+        bool mistake_in_data = false;
         if(event->data_len == 5 && event->data[0] == 'h' && event->data[1] == 'e') esp_mqtt_client_publish(client,"test","esp32 connected",0,0,0);
         if(event->data_len == 17 && !first_ignore){
             data[0] = 0;
@@ -185,15 +204,14 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event){ //here es
             {
                 if(i == 8) continue;
                 if((event->data[i] - 48 > 1 || event->data[i] - 48 < 0)){
-                    dont = true;
+                    mistake_in_data = true;
                 }
                 else {
                     data[i/9] |= (event->data[i]-48)<<(8 - (i%9) - 1);
 
                 }
-                printf("%d\n",data[i/9]);
             }            
-            if(!dont)
+            if(!mistake_in_data)
                 send = true;
         }
         else if(first_ignore) first_ignore = false;
