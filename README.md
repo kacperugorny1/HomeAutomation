@@ -25,3 +25,5 @@ Subdevice in current project just turn on and turn off 4 leds, but it could be m
 - Wider bytes for communication - 4 or 8 bytes to have more control and commands be more straight foward - first byte says if its set, get state or scan the bus - now the commands limits the other possibilities - less addresses in bus 
 - Queue of operations on esp
 - manual adding addresses
+- Reading input
+- ws2812B output
