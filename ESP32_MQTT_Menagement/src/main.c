@@ -14,6 +14,10 @@
 #include "driver/gpio.h"
 #include "math.h"
 
+/*
+TODO:
+mutex on expectdata and send set.
+*/
 #define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
 #define BYTE_TO_BINARY(byte)  \
   ((byte) & 0x80 ? '1' : '0'), \
@@ -38,7 +42,7 @@ const char *pass = "1qaz2wsx";
 // const char *ssid = "UPC94DE76D";
 // const char *pass = "Vv5re2masfmk";
 // const char *mqtt_addres = "mqtt://192.168.0.242:1883"; //wro
-const char *mqtt_addres = "mqtt://192.168.1.129:1883"; //goszcz
+const char *mqtt_addres = "mqtt://185.201.114.232:1883"; //goszcz
 
 
 volatile bool WifiConnected = false;
@@ -208,7 +212,6 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event){ //here es
                 }
                 else {
                     data[i/9] |= (event->data[i]-48)<<(8 - (i%9) - 1);
-
                 }
             }            
             if(!mistake_in_data)

@@ -11,10 +11,11 @@ New functionality - at start rs485 menager scans the bus for the devices - no ha
 
 ## MQTT commands
 To communicate with the hardware you use I2C like commands. 
-- "00001111 00001100" - first "byte" and then after the space there is a command that device get. 
+- "00001111 00001100" - first "byte" is address and then after the space there is a command that device get. 
 - "11111111 11111111" - command that request for state of every device.
 - "11111111 11111110" - scan bus for devices
 - "11111111 ADDRESS" - command that request for state of particural device. 
+- "11111110 ADDRESS" - add address manually. 
 - "hello" - Checks if esp32 is connected to mqtt topic.
 
 ## Subdevice functionality
