@@ -95,7 +95,7 @@ void scanDevices(bool first){
   }
   temp = realloc(addresses, subdevices_count * sizeof(uint8_t));
   addresses = temp;
-  data_to_send = (uint8_t *)malloc(sizeof(uint8_t)*(subdevices_count + 1));
+  data_to_send = (uint8_t *)malloc(sizeof(uint8_t)*((subdevices_count + 1)*2));
 
 }
 
@@ -110,7 +110,7 @@ void addDevice(uint8_t device_address) {
     addresses[subdevices_count] = device_address;
 
     subdevices_count++;
-    data_to_send = (uint8_t *)malloc(sizeof(uint8_t)*(subdevices_count + 1));
+    data_to_send = (uint8_t *)malloc(sizeof(uint8_t)*((subdevices_count + 1)*2));
 
 }
 
@@ -173,14 +173,16 @@ int main(void)
 		}
 		//get all adresses value
 		else if(data[0] == 0xFF && data[1] == 0xFF){
-			data_to_send[0] = leds;
+			data_to_send[0] = 0;
+			data_to_send[1] = leds;
 			for(int i = 0; i < subdevices_count; ++i){
 			    data[0] = 0xFF;
 			    data[1] = addresses[i];
 			    HAL_UART_Transmit(&huart1, data, data_len, 20);
 			    HAL_GPIO_WritePin(RS_MODE_GPIO_Port, RS_MODE_Pin, GPIO_PIN_RESET);
 			    if(HAL_UART_Receive(&huart1, data, 2, 40) == HAL_OK){
-			      data_to_send[i + 1] = data[1];
+			      data_to_send[(i + 1) * 2] = data[0];
+			      data_to_send[(i + 1) * 2 + 1] = data[1];
 			      HAL_GPIO_WritePin(RS_MODE_GPIO_Port, RS_MODE_Pin, GPIO_PIN_SET);
 			    }
 			    else{
@@ -188,7 +190,7 @@ int main(void)
 			      HAL_GPIO_WritePin(RS_MODE_GPIO_Port, RS_MODE_Pin, GPIO_PIN_SET);
 			    }
 			}
-			HAL_UART_Transmit(&huart3, data_to_send, subdevices_count + 1, HAL_MAX_DELAY);
+			HAL_UART_Transmit(&huart3, data_to_send, (subdevices_count + 1)*2, HAL_MAX_DELAY);
 
 
 		}

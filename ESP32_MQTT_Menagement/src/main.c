@@ -37,10 +37,10 @@ mutex on expectdata and send set.
 static const int RX_BUF_SIZE = 1024;
 
 static const char *TAG = "MQTT_TCP";
-const char *ssid = "internet_dom1";
-const char *pass = "1qaz2wsx";
-// const char *ssid = "UPC94DE76D";
-// const char *pass = "Vv5re2masfmk";
+// const char *ssid = "internet_dom1";
+// const char *pass = "1qaz2wsx";
+const char *ssid = "UPC94DE76D";
+const char *pass = "Vv5re2masfmk";
 // const char *mqtt_addres = "mqtt://192.168.0.242:1883"; //wro
 const char *mqtt_addres = "mqtt://185.201.114.232:1883"; //goszcz
 
@@ -79,18 +79,20 @@ void app_main() {
 
 }
 static void uart_rx_task(void *arg){
-    char* Rxdata = (char *) malloc(sizeof(char) * 256);
+    char* Rxdata = (char *) malloc(sizeof(char) * 512);
     char str[1024] = "";
     char help[100] = "";
     while(1){
-        int l = uart_read_bytes(UART_NUM_2, (void *)Rxdata, 254,200/portTICK_PERIOD_MS);
+        int l = uart_read_bytes(UART_NUM_2, (void *)Rxdata, 512,200/portTICK_PERIOD_MS);
         if(esp_timer_get_time() - tm > 300000) expectdata = false;
         if(l != 0 && expectdata){
             for(int i = 0; i < l; ++i){
                 if(expect_address != -1 && l == 1)
                     sprintf(help,"u%d: "BYTE_TO_BINARY_PATTERN" ",expect_address,BYTE_TO_BINARY(Rxdata[i]));
-                else
-                    sprintf(help,"u%d: "BYTE_TO_BINARY_PATTERN" ",i,BYTE_TO_BINARY(Rxdata[i]));
+                else{
+                    sprintf(help,"u%d: "BYTE_TO_BINARY_PATTERN" ",Rxdata[i],BYTE_TO_BINARY(Rxdata[i + 1]));
+                    i++;
+                }
                 strcat(str,help);
             }
             printf(str);
